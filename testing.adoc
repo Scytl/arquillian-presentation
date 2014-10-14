@@ -1,0 +1,86 @@
+
+== !
+
+[.incremental.pull-left]
+* Testing is hard
+* Testing is no fun
+* Testing is slow
+* There's no time to test
+* Testing *sucks*
+
+[.incremental.replace]
+== !
+
+You can't fix what you can't *run*
+
+You can't fix what you can't *debug*
+
+You can't fix what you can't *test*
+
+You can't *develop* if you can't *test*
+
+
+== !
+
+[.statement]
+{count-label} Testing is *development*
+
+== !
+
+[.canvas.relax-x.middle, {caption-off}]
+image::legobox.jpg[]
+
+== !
+
+[{caption-off}, crole="band"]
+.My application
+image::backtofuture.jpg[]
+
+== !
+
+[{caption-off}, crole="band"]
+.My application after some time
+image::IMG_6378.jpeg[]
+
+== !
+
+[{caption-off}, crole="band"]
+.Unit Test
+image::lego-head-pieces.jpg[]
+
+== !
+
+[{caption-off}, crole="band"]
+.Integration Test
+image::garage.jpg[]
+
+[.topic.source]
+== Example of CDI
+
+[source, java]
+.PaymentGateway.java
+----
+@Inject
+@CreditCard
+Payment payment; // <1>
+----
+<1> CDI injects instance
+
+[source, java]
+.PaymentGatewayTest.java
+----
+PaymentGateway pg = new PaymentGateway();
+pg.setPayment(new CreditCardPayment()); // <1>
+pg.doPayment(...);
+----
+<1> Our test is not executed within CDI container
+
+[.topic.intro]
+== ¿Will it work in _production_?
+
+== !
+
+[.incremental.pull-left]
+* Real tests increase *certainty*
+* Real tests build *confidence*
+* Real tests increase *robustness*

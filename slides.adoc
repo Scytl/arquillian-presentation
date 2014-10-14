@@ -1,0 +1,46 @@
+= Testing JavaEE with *Arquillian*
+Alex Soto <https://twitter.com/alexsotob[@alexsotob]>
+include::attributes.adoc[]
+
+== !
+
+[.canvas.relax-x.middle, {caption-off}]
+image::intro.png[]
+
+== !
+
+[.statement]
+{next-label} +
+Testing
+
+include::testing.adoc[]
+
+== !
+
+[.statement]
+{next-label} +
+Principles of _Arquillian_
+
+include::arquillian.adoc[]
+
+== !
+
+[.statement]
+{next-label} +
+Arquillian Extensions
+
+include::extensiones-arquillian.adoc[]
+
+== !
+
+[.statement]
+{next-label} +
+Conclusions
+
+include::conclusions.adoc[]
+
+[.topic.ending, hrole="name"]
+== Alex Soto
+
+[.footer]
+icon:twitter[] @alexsotob

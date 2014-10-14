@@ -1,0 +1,424 @@
+== !
+
+Persistence:: $$Avoid redundant code in persistence tests$$
+Drone/Graphene:: $$Functional tests$$
+Byteman:: $$Mock 2.0$$
+Droidum:: $$Android applications$$
+Rest:: $$Avoid redundant code in REST tests$$
+Cucumber, Thucydides, Spock:: $$Arquillian with BDD flavor$$
+
+[.topic.intro]
+== Arquillian _Persistence_
+
+[.topic]
+== Arquillian Persistence
+
+[.scatter.incremental]
+* Wrap every test ina transaction
+* Populate data set
+* Maintain Database into known state
+* Compare Database at the end
+
+[.topic.source]
+== Old Way
+
+[source, java]
+----
+@Before
+public void preparePersistenceTest() {
+  clearDatabase();
+  insertData();
+  startTransaction();
+}
+private void clearDatabase() {
+  utx.begin();
+  em.joinTransaction();
+  em.createQuery("delete from Beer").executeUpdate();
+  utx.commit();
+}
+private void insertData() {
+  utx.begin();
+  em.joinTransaction();
+  Beer beer = BeerBuilder.create("Heineken").style("Pale Lager").build();
+  em.persist(beer);
+  utx.commit();
+}
+----
+
+[.topic.source]
+== APE dependency
+
+[source, xml]
+.pom.xml
+----
+<dependency>
+  <groupId>org.jboss.arquillian.extension</groupId>
+  <artifactId>arquillian-persistence-dbunit</artifactId>
+  <version>${arquillian-persistence.version}</version>
+  <scope>test</scope>
+</dependency>
+----
+
+[.topic.source]
+== Dataset
+
+[source, yaml]
+beers.yaml
+----
+beer:
+  - id: 1
+    name: Heineken
+    style: Pale Lager
+----
+
+[.topic.source]
+== Test
+
+[source, java]
+.BeerTest.java
+----
+@EJB BeerService beerService;
+
+@Test
+@UsingDataSet("datasets/beers.yml")
+public void should_return_beer_by_type() throws Exception {
+    assertThat(beerService.findBeersByType("Pale Lager"), hasSize(1));
+}
+----
+
+[.topic.intro]
+== _DEMO_
+
+[.topic.intro]
+== Arquillian _Drone_/_Graphene_
+
+[.topic]
+== Arquillian Drone/Graphene
+
+[.scatter.incremental]
+* Functional testing for web applications
+* Manage lifecycle of the browser
+* Use _Selenium WebDriver_
+* Support for _Page_ and _AJAX_ pattern
+* Compatible with _Android_ navigation
+* Integrates with _QUnit_
+
+[.topic.source]
+== Drone/Graphene dependency
+
+[source, xml]
+.pom.xml
+----
+<dependencyManagement>
+  <dependency>
+    <groupId>org.jboss.arquillian.extension</groupId>
+    <artifactId>arquillian-drone-bom</artifactId>
+    <version>${drone.version}</version>
+    <type>pom</type>
+    <scope>import</scope>
+  </dependency>
+
+  <dependency>
+    <groupId>org.jboss.arquillian.selenium</groupId>
+    <artifactId>selenium-bom</artifactId>
+    <version>${selenium.bom.version}</version>
+    <type>pom</type>
+    <scope>import</scope>
+  </dependency>
+</dependencyManagement>
+----
+
+[.topic.source]
+== Drone/Graphene dependency
+
+[source, xml]
+.pom.xml
+----
+<dependency>
+  <groupId>org.jboss.arquillian.extension</groupId>
+  <artifactId>arquillian-drone-webdriver-depchain</artifactId>
+  <type>pom</type>
+  <scope>test</scope>
+</dependency>
+
+<dependency>
+  <groupId>org.jboss.arquillian.graphene</groupId>
+  <artifactId>graphene-webdriver</artifactId>
+  <version>2.0.3.Final</version>
+  <scope>test</scope>
+  <type>pom</type>
+</dependency>
+----
+
+[.topic.source]
+== Arquillian Configuration
+
+[source, xml]
+.arquillian.xml
+----
+<arquillian>
+  <extension qualifier="webdriver">
+    <property name="browser">firefox</property>
+  </extension>
+</arquillian>
+----
+
+[.topic.source]
+== Test
+
+[source, java]
+.SessionsTest.java
+----
+  @Deployment(testable = false)
+  public static WebArchive createDeployment() {}
+
+  @ArquillianResource
+  URL contextPath;
+
+  @Drone
+  WebDriver driver;
+
+  @Test
+  public void should_show_all_sessions(@InitialPage ShowSessionPage showSessionPage) throws IOException {
+    showSessionPage.assertSessionsAreShown();
+  }
+----
+
+[.topic.source]
+== JSF
+
+[source, html]
+.view.xhtml
+----
+<div class="jumbotron">
+  <div id="welcomeMessage" class="content">
+    <h1>List of sessions registered on system</h1>
+  </div>
+</div>
+<div class="well well-sm">
+  <div class="panel panel-default">
+    <h:dataTable id="session" styleClass="table table-striped"
+          value="#{sessionService.sessions}" var="sessionConference">
+      <h:column>
+        <f:facet name="header">Title</f:facet>
+        <h:outputText styleClass="title" value="#{sessionConference.title}" />
+      </h:column>
+      <h:column>
+        <f:facet name="header">Start</f:facet>
+          #{sessionConference.startDate}
+      </h:column>
+    </h:dataTable>
+  </div>
+</div>
+----
+
+[.topic.source]
+== Page
+
+[source, java]
+.ShowSessionPage.java
+----
+@Location("view.xhtml")
+public class ShowSessionPage {
+
+    @FindBy
+    private WebElement welcomeMessage;
+
+    @FindBy
+    private WebElement session;
+
+    public void assertSessionsAreShown() {
+      assertThat(sessionTitles(), containsInAnyOrder("Devoxx", "JavaOne"));
+    }
+  }
+----
+
+[.topic.intro]
+== _DEMO_
+
+[.topic.intro]
+== Arquillian _AngularJS_ to Graphene
+
+[.topic]
+== Arquillian AngularJS to Graphene
+
+[.scatter.incremental]
+* Synchornization of _AngularJS_ calls
+* +@FindByNg+ annotation support
+
+[.topic.source]
+== AngularJS dependency
+
+[source, xml]
+.pom.xml
+----
+<dependency>
+  <groupId>org.jboss.arquillian.extension</groupId>
+  <artifactId>arquillian-angularjs-graphene</artifactId>
+  <version>1.2.0.Beta1</version>
+</dependency>
+----
+
+[.topic.source]
+== AngularJS client
+
+[source, html]
+.index.html
+----
+<h2>Todo</h2>
+<div ng-controller="TodoCtrl">
+<span>{{remaining()}} of {{todos.length}} remaining</span>
+  [ <a href="" ng-click="archive()">archive</a> ]
+  <ul class="unstyled">
+    <li ng-repeat="todo in todos">
+      <input type="checkbox" ng-model="todo.done">
+      <span class="done-{{todo.done}}">{{todo.text}}</span>
+    </li>
+  </ul>
+  <form ng-submit="addTodo()">
+    <input type="text" ng-model="todoText"  size="30" placeholder="add new todo here">
+    <input class="btn-primary" type="submit" value="add">
+  </form>
+</div>
+----
+
+[.topic.source]
+== Angular Test
+
+[source, java]
+.AngularTest.java
+----
+@FindByNg(model = "todo.done") List<WebElement> todos;
+
+@FindByNg(model = "todoText") WebElement todoEntry;
+
+@FindByNg(action = "addTodo()") WebElement addTodo;
+
+@FindByNg(repeat = "todo in todos") List<WebElement> todoRepeat;
+
+@Test
+public void testAddTodo() {
+  assertEquals(2, todos.size());
+  todoEntry.sendKeys("This is a new TODO item");
+  addTodo.submit();
+  assertEquals(3, todos.size());
+}
+----
+
+[.topic.intro]
+== Arquillian and _BDD_
+
+[.topic]
+== Cucumber, Thucydides y Spock
+
+[.incremental.scatter]
+* Use _Behaviour-Driven Development_ in _Arquillian_
+* Integrates with Cucumber using _Cukes in Space_
+* Integrates with Thucydides using _junit_ rules
+* Integrates with Spock using _Arquillian Sputnik_
+
+[.topic.source]
+== Cucumber Dependency
+
+[source, xml]
+.pom.xml
+----
+<dependency>
+  <groupId>com.github.cukespace</groupId>
+  <artifactId>cukespace-core</artifactId>
+  <version>1.5.10</version>
+  <scope>test</scope>
+</dependency>
+----
+
+[.topic.source]
+== Cucumber feature
+
+[source, gherkin]
+.conferences-service.feature
+----
+Feature: Find Conferences
+  Scenario: Finding All Conferences
+
+    Given I have Devoxx conference
+    When I find all conferences in system
+    Then Devoxx should be listed
+----
+
+[.topic.source]
+== Cucumber
+
+[source, java]
+.ConferencesTest.java
+----
+@RunWith(CukeSpace.class)
+@Features(value = "org/superbiz/conferences-service.feature")
+public class ConferenceServiceFuntionalTest {
+
+  @Deployment public static JavaArchive deploy() { }
+
+  @EJB ConferenceService conferenceService;
+
+  @Given(value = "^I have (\\w+) conference$")
+  public void aConference(String conferenceName) {}
+
+  @When(value = "^I find all conferences in system$")
+  public void findAllConferences() {}
+
+  @Then(value = "^(\\w+) should be listed$")
+  public void shouldFindConferences(String conferenceName) {}
+}
+----
+
+[.topic.intro]
+== _DEMO_
+
+[.topic.source]
+== Arquillian Sputnik Dependencies
+
+[source, xml]
+.pom.xml
+----
+<dependency>
+  <groupId>org.jboss.arquillian.spock</groupId>
+  <artifactId>arquillian-spock-container</artifactId>
+  <version>${project.version}</version>
+  <scope>test</scope>
+</dependency>
+<dependency>
+  <groupId>org.spockframework</groupId>
+  <artifactId>spock-core</artifactId>
+  <scope>test</scope>
+  <version>${version.spock}</version>
+</dependency>
+<dependency>
+  <groupId>org.codehaus.groovy</groupId>
+  <artifactId>groovy-all</artifactId>
+  <scope>test</scope>
+  <version>${version.groovy}</version>
+</dependency>
+----
+
+[.topic.source]
+== Arquillian Sputnik Test
+
+[source, groovy]
+.SecureServiceTest.groovy
+----
+@RunWith(ArquillianSputnik)
+class AccountServiceSpecification extends Specification {
+
+    @Deployment def static JavaArchive "create deployment"() {}
+
+    @Inject AccountService service
+
+    def "transfer should be possible between two accounts"() {
+        when:
+        service.transfer(from, to, amount)
+
+        then:
+        from.balance == fromBalance
+        to.balance == toBalance
+
+    }
+----
